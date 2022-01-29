@@ -43,6 +43,9 @@ function getHSVRange(lower, upper, img) {
 	cv.inRange(img, low, high, output);
 	return output;
 }
+function distance(a, b) {
+	return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2);
+}
 imgElement.onload = function() {
 	// HSV COLOR RANGES
 	const lower_green = [40, 40, 40, 0];
@@ -65,11 +68,14 @@ imgElement.onload = function() {
 	let yellow = new cv.Mat();
 	let purple = new cv.Mat();
 	let red = new cv.Mat();
+	let rotated = new cv.Mat();
 	// let upper_red = new cv.Mat();
   	// Read and display image
 	let mat = cv.imread(imgElement);
 	var width = mat.cols;
 	var height = mat.rows;
+	let dsize = new cv.Size(width, height);
+	var center = new cv.Point(width/2, height/2);
 	// Convert to HSV
 	let hsv = new cv.Mat();
 	cv.cvtColor(mat, hsv, cv.COLOR_BGR2HSV, 0);
@@ -82,7 +88,21 @@ imgElement.onload = function() {
 	yellow_pos = getHSVLocation(yellow, width, height);
 	purple_pos = getHSVLocation(purple, width, height);
 	red_pos = getHSVLocation(red, width, height);
-	cv.imshow("outputCanvas", red);
+	// Angle Variables
+	var left_angle = Math.atan((purple_pos[1]-red_pos[1])/(purple_pos[0]-red_pos[0]));
+	var right_angle = Math.atan((green_pos[1]-yellow_pos[1])/(green_pos[0]-yellow_pos[0]));
+	var left_distance = distance(purple_pos, red_pos);
+	var right_distance = distance(green_pos, yellow_pos);
+	console.log(left_angle);
+	console.log(right_angle);
+	console.log(left_distance);
+	console.log(right_distance);
+	var left_step = left_distance/8;
+	var right_step = right_distance/8;
+	// var angle = Math.atan((yellow_pos[1]-red_pos[1])/(yellow_pos[0]-red_pos[0]));
+	// let M = cv.getRotationMatrix2D(center, angle, 1);
+	// cv.warpAffine(mat, rotated, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+	cv.imshow("outputCanvas", mat);
 
 }
 function onOpenCvReady() {
