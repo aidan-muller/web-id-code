@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hello OpenCV.js</title>
+</head>
+<body>
+<h2>Hello OpenCV.js</h2>
+<p id="status">Loading</p>
+<div>
+  <div class="inputoutput">
+    <img id="imageSrc" alt="No Image"/>
+    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+  	<canvas id="outputCanvas"></canvas>
+  </div>
+</div>
+<script type="text/javascript">
+let imgElement = document.getElementById("imageSrc")
+let inputElement = document.getElementById("fileInput");
+inputElement.addEventListener("change", (e) => {
+   	imgElement.src = URL.createObjectURL(e.target.files[0]);
+	imgElement.style.display = 'none';
+}, false);
+function getHSVLocation(img, w, h) {
+	var colors = [];
+	var num = 0;
+	for (var i = 0; i < h; i++) {
+		for (var j = 0; j < w; j++) {
+			if (img.ucharPtr(i, j) == 0) {}
+			else {
+				colors.push([j, i]);
+				num += 1;
+			}
+		}
+	}
+	num = parseInt(num/2);
+	return colors[num];
+}
+function getHSVRange(lower, upper, img) {
+	const low = new cv.Mat(img.rows, img.cols, img.type(), lower);
+	const high = new cv.Mat(img.rows, img.cols, img.type(), upper);
+	const output = new cv.Mat();
+	cv.inRange(img, low, high, output);
+	return output;
+}
+imgElement.onload = function() {
+	// HSV COLOR RANGES
+	const lower_green = [40, 40, 40, 0];
+	const upper_green = [70, 255, 255, 255];
+	const lower_yellow = [80, 120, 150, 0];
+	const upper_yellow = [100, 150, 255, 255];
+	const lower_purple = [129, 100, 150, 0];
+	const upper_purple = [158, 255, 255, 255];
+	const lower_red = [120, 150, 200, 0];
+	const upper_red = [135, 255, 255, 255];
+	// Average positions;
+	var green_pos = [0, 0];
+	var purple_pos = [0, 0];
+	var yellow_pos = [0, 0];
+	var green_pos = [0, 0];
+	var lower_red_pos = [0, 0];
+	var upper_red_pos = [0, 0];
+	// HSV Images
+	let green = new cv.Mat();
+	let yellow = new cv.Mat();
+	let purple = new cv.Mat();
+	let red = new cv.Mat();
+	// let upper_red = new cv.Mat();
+  	// Read and display image
+	let mat = cv.imread(imgElement);
+	var width = mat.cols;
+	var height = mat.rows;
+	// Convert to HSV
+	let hsv = new cv.Mat();
+	cv.cvtColor(mat, hsv, cv.COLOR_BGR2HSV, 0);
+	// Get HSV and Average locations for each colour
+	green = getHSVRange(lower_green, upper_green, hsv);
+	yellow = getHSVRange(lower_yellow, upper_yellow, hsv);
+	purple = getHSVRange(lower_purple, upper_purple, hsv);
+	red = getHSVRange(lower_red, upper_red, hsv);
+	green_pos = getHSVLocation(green, width, height);
+	yellow_pos = getHSVLocation(yellow, width, height);
+	purple_pos = getHSVLocation(purple, width, height);
+	red_pos = getHSVLocation(red, width, height);
+	cv.imshow("outputCanvas", red);
+
+}
+function onOpenCvReady() {
+	document.getElementById('status').innerHTML='ready';
+}
+</script>
+<script async src="https://docs.opencv.org/4.5.5/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+</html>
