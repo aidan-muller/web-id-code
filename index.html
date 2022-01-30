@@ -46,6 +46,47 @@ function getHSVRange(lower, upper, img) {
 function distance(a, b) {
 	return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2);
 }
+function radians(theta) {
+	return theta*Math.PI/180;
+}
+function is_normal(pixel) {
+	t_distance = Math.abs(pixel[0]-pixel[1]) + Math.abs(pixel[0]-pixel[2]);
+	if (t_distance > 70) {
+		return 0;
+	}
+	return 1;
+}
+function getAvgColor(img, x, y, w, h) {
+	var black = 0;
+	var white = 0;
+	for (var y_p = y; y_p < y+h; y_p++) {
+		for (var x_p = x; x_p < x+h; x_p++) {
+			pixel_counter = 0;
+			for (var i = 0; i < 3; i++) {
+				pixel_counter += img.ucharPtr(y_p, x_p)[i];
+			}
+			if (is_normal(img.ucharPtr(y_p, x_p))) {
+				if (pixel_counter >= 383) {
+					white += 1;
+				}
+				if (pixel_counter <= 382) {
+					black += 1;
+				}
+			}
+		}
+	}
+	if (white > black) {
+		return 0;
+	}
+	return 1;
+}
+function array_to_binary(binary_array) {
+	total = 0;
+	for (var i = 0; i < 8; i++) {
+		total += binary_array[i] * (2**(7-i));
+	}
+	return total;
+}
 imgElement.onload = function() {
 	// HSV COLOR RANGES
 	const lower_green = [40, 40, 40, 0];
@@ -89,19 +130,41 @@ imgElement.onload = function() {
 	purple_pos = getHSVLocation(purple, width, height);
 	red_pos = getHSVLocation(red, width, height);
 	// Angle Variables
-	var left_angle = Math.atan((purple_pos[1]-red_pos[1])/(purple_pos[0]-red_pos[0]));
-	var right_angle = Math.atan((green_pos[1]-yellow_pos[1])/(green_pos[0]-yellow_pos[0]));
+	var left_angle = Math.abs(Math.atan((purple_pos[1]-red_pos[1])/(purple_pos[0]-red_pos[0])));
+	var right_angle = Math.abs(Math.atan((yellow_pos[1]-green_pos[1])/(yellow_pos[0]-green_pos[0])));
 	var left_distance = distance(purple_pos, red_pos);
 	var right_distance = distance(green_pos, yellow_pos);
-	console.log(left_angle);
-	console.log(right_angle);
-	console.log(left_distance);
-	console.log(right_distance);
+	// console.log(left_angle);
+	// console.log(right_angle);
+	// console.log(left_distance);
+	// console.log(right_distance);
 	var left_step = left_distance/8;
 	var right_step = right_distance/8;
-	// var angle = Math.atan((yellow_pos[1]-red_pos[1])/(yellow_pos[0]-red_pos[0]));
-	// let M = cv.getRotationMatrix2D(center, angle, 1);
-	// cv.warpAffine(mat, rotated, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+	var left_pos = red_pos;
+	var right_pos = yellow_pos;
+	var binary = [];
+	for (var y = 0; y < 8; y++) {
+		// console.log(left_pos, left_step, left_angle);
+		curser_pos = [left_pos[0], left_pos[1]];
+		left_right = distance(left_pos, right_pos)/8;
+		left_right_ang = Math.atan((left_pos[1]-right_pos[1])/(left_pos[0]-right_pos[0]));
+		binary.push([]);
+		for (var x = 0; x < 8; x++) {
+			binary[y].push(getAvgColor(mat, curser_pos[0], curser_pos[1], left_right, left_step));
+			curser_pos[0] += left_right*Math.cos(left_right_ang);
+			curser_pos[1] += left_right*Math.sin(left_right_ang);
+		}
+		left_pos[0] += left_step*(Math.cos((left_angle)));
+		left_pos[1] += left_step*Math.sin((left_angle));
+                right_pos[0] += right_step*Math.cos((right_angle));
+                right_pos[1] += right_step*Math.sin((right_angle));
+	}
+	// console.log(binary);
+	var output = "";
+	for (var i = 0; i < 8; i++) {
+		output += String.fromCharCode(array_to_binary(binary[i]));
+	}
+	console.log(output);
 	cv.imshow("outputCanvas", mat);
 
 }
