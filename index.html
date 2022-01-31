@@ -2,16 +2,17 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Hello OpenCV.js</title>
+<title>Web ID Code Reader</title>
 </head>
 <body>
-<h2>Hello OpenCV.js</h2>
+<h2>Web ID Code Reader</h2>
 <p id="status">Loading</p>
 <div>
   <div class="inputoutput">
     <img id="imageSrc" alt="No Image"/>
     <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
-  	<canvas id="outputCanvas"></canvas>
+    <p id="code"> Your code will appear here</p>	
+    <canvas id="outputCanvas"></canvas>
   </div>
 </div>
 <script type="text/javascript">
@@ -98,10 +99,10 @@ imgElement.onload = function() {
 	const lower_red = [120, 150, 200, 0];
 	const upper_red = [135, 255, 255, 255];
 	// Average positions;
-	var green_pos = [0, 0];
-	var purple_pos = [0, 0];
-	var yellow_pos = [0, 0];
-	var green_pos = [0, 0];
+	// var red_pos = [0, 0];
+	// var purple_pos = [0, 0];
+	// var yellow_pos = [0, 0];
+	// var green_pos = [0, 0];
 	var lower_red_pos = [0, 0];
 	var upper_red_pos = [0, 0];
 	// HSV Images
@@ -130,8 +131,8 @@ imgElement.onload = function() {
 	purple_pos = getHSVLocation(purple, width, height);
 	red_pos = getHSVLocation(red, width, height);
 	// Angle Variables
-	var left_angle = Math.abs(Math.atan((purple_pos[1]-red_pos[1])/(purple_pos[0]-red_pos[0])));
-	var right_angle = Math.abs(Math.atan((yellow_pos[1]-green_pos[1])/(yellow_pos[0]-green_pos[0])));
+	var left_angle = (Math.atan2((purple_pos[1]-red_pos[1]),(purple_pos[0]-red_pos[0])));
+	var right_angle = (Math.atan2((green_pos[1]-yellow_pos[1]),(green_pos[0]-yellow_pos[0])));
 	var left_distance = distance(purple_pos, red_pos);
 	var right_distance = distance(green_pos, yellow_pos);
 	// console.log(left_angle);
@@ -145,9 +146,10 @@ imgElement.onload = function() {
 	var binary = [];
 	for (var y = 0; y < 8; y++) {
 		// console.log(left_pos, left_step, left_angle);
+		console.log(left_pos, right_pos);
 		curser_pos = [left_pos[0], left_pos[1]];
 		left_right = distance(left_pos, right_pos)/8;
-		left_right_ang = Math.atan((left_pos[1]-right_pos[1])/(left_pos[0]-right_pos[0]));
+		left_right_ang = (Math.atan2((right_pos[1]-left_pos[1]),(right_pos[0]-left_pos[0])));
 		binary.push([]);
 		for (var x = 0; x < 8; x++) {
 			binary[y].push(getAvgColor(mat, curser_pos[0], curser_pos[1], left_right, left_step));
@@ -165,6 +167,7 @@ imgElement.onload = function() {
 		output += String.fromCharCode(array_to_binary(binary[i]));
 	}
 	console.log(output);
+	document.getElementById("code").innerHTML = output;
 	cv.imshow("outputCanvas", mat);
 
 }
